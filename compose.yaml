@@ -1,0 +1,38 @@
+
+services:
+  app:
+    build: .
+    container_name: docker-hello-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: learningdb
+      DB_USER: learninguser
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+    restart: unless-stopped
+
+  db:
+    image: postgres:17
+    container_name: docker-hello-db
+    environment:
+      POSTGRES_DB: learningdb
+      POSTGRES_USER: learninguser
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U learninguser -d learningdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
