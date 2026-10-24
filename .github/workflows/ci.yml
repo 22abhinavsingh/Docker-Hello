@@ -3,14 +3,36 @@ name: Spring Boot CI/CD
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+
+    env:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: learningdb
+      DB_USER: learninguser
+      DB_PASSWORD: admin
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: learningdb
+          POSTGRES_USER: learninguser
+          POSTGRES_PASSWORD: admin
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U learninguser -d learningdb"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
 
     steps:
       - name: Checkout source code
@@ -20,7 +42,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: "17"
           cache: maven
 
       - name: Make Maven wrapper executable
